@@ -140,10 +140,12 @@ dd if=/dev/zero of=bootfiles/kernel8.img bs=1024 count=18432
 # Assuming xen is less than 2MiB in size
 dd if=${WRKDIR}xen/xen/xen of=bootfiles/kernel8.img bs=1024 conv=notrunc
 
+# 64-bit
 if [ "${BUILD_ARCH}" == "arm64" ]; then
     # Assuming linux is less than 15.5MiB in size
     # Image is offset by 2.5MiB from the beginning of the file
     dd if=${WRKDIR}linux/.build-arm64/arch/arm64/boot/Image of=bootfiles/kernel8.img bs=1024 seek=2560 conv=notrunc
+# 32-bit
 elif [ "${BUILD_ARCH}" == "armhf" ]; then
     # Assuming linux is less than 16MiB in size
     # Image is offset by 2MiB from the beginning of the file
@@ -207,7 +209,7 @@ trap finish EXIT
 sudo mkdir -p ${MNTRAMDISK}
 sudo mount -t tmpfs -o size=3g tmpfs ${MNTRAMDISK}
 
-qemu-img create ${IMGFILE} 4096M
+qemu-img create ${IMGFILE} 7000M
 /sbin/parted ${IMGFILE} --script -- mklabel msdos
 /sbin/parted ${IMGFILE} --script -- mkpart primary fat32 2048s 264191s
 /sbin/parted ${IMGFILE} --script -- mkpart primary ext4 264192s -1s
