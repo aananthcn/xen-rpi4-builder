@@ -8,7 +8,7 @@
 WRKDIR=$(pwd)/
 SCRIPTDIR=$(cd $(dirname $0) && pwd)/
 
-USERNAME=pi
+USERNAME=${USER}
 PASSWORD=raspberry
 SALT=dw
 HASHED_PASSWORD=$(perl -e "print crypt(\"${PASSWORD}\",\"${SALT}\");")
@@ -28,6 +28,11 @@ else
     DTBXENO=pi4-32-xen
 fi
 XEN_ADDR=0x00200000
+
+
+# Ownership of some files gets changed to root in previous build, hence change it
+sudo chown -R ${USER}:${USER} *
+
 
 # Clone sources
 if [ ! -d firmware ]; then
@@ -52,6 +57,7 @@ fi
 # Build xen
 if [ ! -s ${WRKDIR}xen/xen/xen ]; then
     cd ${WRKDIR}xen
+
     if [ ! -s xen/.config ]; then
         echo "CONFIG_DEBUG=y" > xen/arch/arm/configs/arm64_defconfig
         echo "CONFIG_SCHED_ARINC653=y" >> xen/arch/arm/configs/arm64_defconfig
