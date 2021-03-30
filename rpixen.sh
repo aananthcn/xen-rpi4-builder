@@ -55,6 +55,9 @@ fi
 
 if [ ! -d u-boot ]; then
     git clone --depth 1 https://github.com/u-boot/u-boot.git
+    cd u-boot
+    git apply ${WRKDIR}patches/u-boot/*.patch
+    cd ${WRKDIR}
 fi
 
 

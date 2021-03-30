@@ -1,0 +1,31 @@
+diff --git a/include/configs/rpi.h b/include/configs/rpi.h
+index 834f1cd2..321b202f 100644
+--- a/include/configs/rpi.h
++++ b/include/configs/rpi.h
+@@ -202,12 +202,20 @@
+ 
+ #include <config_distro_bootcmd.h>
+ 
+-#define CONFIG_EXTRA_ENV_SETTINGS \
+-	"dhcpuboot=usb start; dhcp u-boot.uimg; bootm\0" \
+-	ENV_DEVICE_SETTINGS \
+-	ENV_DFU_SETTINGS \
+-	ENV_MEM_LAYOUT_SETTINGS \
+-	BOOTENV
++#define BOOT_XEN_FROM_SDCARD	1
+ 
++#if BOOT_XEN_FROM_SDCARD
++	#define CONFIG_EXTRA_ENV_SETTINGS \
++		"load_kernel=fatload mmc 0:1 ${loadaddr} kernel8.img\0" \
++		"load_image=fatload mmc 0:1 0x480000 Image\0" \
++		"bootcmd=run load_kernel; run load_image; booti ${loadaddr} - ${fdt_addr}\0"
++#else
++	#define CONFIG_EXTRA_ENV_SETTINGS \
++		"dhcpuboot=usb start; dhcp u-boot.uimg; bootm\0" \
++		ENV_DEVICE_SETTINGS \
++		ENV_DFU_SETTINGS \
++		ENV_MEM_LAYOUT_SETTINGS \
++		BOOTENV
++#endif
+ 
+ #endif
