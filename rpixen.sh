@@ -53,6 +53,19 @@ if [ ! -d linux ]; then
     cd ${WRKDIR}
 fi
 
+if [ ! -d u-boot ]; then
+    git clone --depth 1 https://github.com/u-boot/u-boot.git
+fi
+
+
+# Building u-boot for development
+if [ ! -s ${WRKDIR}u-boot/u-boot.bin ]; then
+    cd u-boot
+    make CROSS_COMPILE=aarch64-linux-gnu- rpi_arm64_defconfig
+    make CROSS_COMPILE=aarch64-linux-gnu- -j $(nproc)
+    cp u-boot.bin ${WRKDIR}bootfiles
+    cd ${WRKDIR}
+fi
 
 # Build xen
 if [ ! -s ${WRKDIR}xen/xen/xen ]; then
@@ -118,9 +131,10 @@ EOF
 # the boot image must be named kernel8.img for the fsbl to load it in 64-bit mode
 # Xen must be placed on a 2M boundary
 cat > bootfiles/config.txt <<EOF
-kernel=kernel8.img
+# kernel=kernel8.img
+# kernel_address=${XEN_ADDR}
+kernel=u-boot.bin
 arm_64bit=1
-kernel_address=${XEN_ADDR}
 dtoverlay=${DTBXENO}
 total_mem=1024
 enable_gic=1
@@ -134,11 +148,17 @@ dtparam=audio=on
 max_framebuffers=2
 
 [all]
-
 enable_jtag_gpio=1
 enable_uart=1
+uart_2ndstage=1
 init_uart_baud=115200
 EOF
+
+# u-boot configurations and deps
+if [ -s ${WRKDIR}u-boot/u-boot.bin ]; then
+    cp ${WRKDIR}linux/.build-arm64/arch/arm64/boot/Image ${WRKDIR}bootfiles
+    cp ${WRKDIR}xen/xen/xen ${WRKDIR}bootfiles
+fi
 
 # 18MiB worth of zeros
 dd if=/dev/zero of=bootfiles/kernel8.img bs=1024 count=18432
@@ -249,7 +269,6 @@ cd ${WRKDIR}
 
 
 # Build Xen tools
-
 if [ "${BUILD_ARCH}" == "arm64" ]; then
     CROSS_PREFIX=aarch64-linux-gnu
     XEN_ARCH=arm64
